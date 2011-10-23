@@ -1,3 +1,12 @@
+//
+// In the name of God
+//
+// This is a tool to convert legacy data encoded in Iran System codepage into UTF-8
+//
+// Author: Ebrahim Mohammadi <ebrahim at mohammadi dot ir>
+// License: public domain
+//
+
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
