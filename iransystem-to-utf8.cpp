@@ -30,7 +30,6 @@ enum CharJoining		// What a char does while it shouldn't
 	JOINS_BOTH = JOINS_PREV | JOINS_NEXT,
 };
 
-#if REVERSE
 enum CharOrdering
 {
 	ORDER_AGNOSTIC = 0,
@@ -38,15 +37,12 @@ enum CharOrdering
 	ORDER_LTR,
 	ORDER_RTL,
 };
-#endif
 
 static char ascii[256];
 static const char* map[256] = { nullptr };
 static uint8_t map_size[256] = { 0 };
 CharJoining map_joining[256] = { JOINS_NONE };
-#if REVERSE
 static CharOrdering map_ordering[256] = { ORDER_AGNOSTIC };
-#endif
 
 CharJoining print_byte(uint8_t byte, CharJoining prev_joining)
 {
@@ -505,11 +501,9 @@ int main(int argc, const char* argv[])
 	uint8_t* data = buf;
 #if REVERSE
 	uint8_t* context_start = data;
-#endif
 	while (size >= 0)
 	{
 		uint8_t byte = *data;
-#if REVERSE
 		CharOrdering my_ordering = map_ordering[byte];
 		if (my_ordering == ORDER_CHECKPOINT || size == 0)
 		{
@@ -541,12 +535,19 @@ int main(int argc, const char* argv[])
 				break;
 			context_start = data + 1;
 		}
-#else
-		prev_joining = print_char(byte, prev_joining);
-#endif
+
 		++data;
 		--size;
 	}
+#else
+	while (size > 0)
+	{
+		uint8_t byte = *data;
+		prev_joining = print_byte(byte, prev_joining);
+		++data;
+		--size;
+	}
+#endif
 	
 	delete[] buf;
 	return 0;
