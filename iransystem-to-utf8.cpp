@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <cstring>
 
-#define MAX_SIZE (1<<24)
+#define MAX_SIZE (1<<28)
 #define REVERSE 1		// Are characters of Right-to-Left parts of input in reverse order?
 
 static const char* ZWNJ = "\xE2\x80\x8C";
@@ -72,12 +72,29 @@ CharJoining print_byte(uint8_t byte, CharJoining prev_joining)
 	return my_joining;
 }
 
+size_t get_file_size(const char* const file_name)
+{
+	FILE* f = fopen(file_name, "r");
+	if (!f)
+		return 0;
+	long size = 0;
+	if (fseek(f, 0, SEEK_END) == 0)
+		size = ftell(f);
+	fclose(f);
+	return size < 0 ? 0 : size;
+}
+
 int main(int argc, const char* argv[])
 {
-	if (argc > 1 && freopen(argv[1], "r", stdin) == nullptr)
+	size_t file_size = MAX_SIZE;
+	if (argc > 1)
 	{
-		fputs("Error: Failed to open input file\n", stderr);
-		return 1;
+		file_size = get_file_size(argv[1]);
+		if (freopen(argv[1], "r", stdin) == nullptr)
+		{
+			fputs("Error: Failed to open input file\n", stderr);
+			return 1;
+		}
 	}
 
 	for (int i = 0; i < 256; ++i)
@@ -503,8 +520,9 @@ int main(int argc, const char* argv[])
 			map_ordering[i] = ORDER_RTL;
 	map_ordering['\n'] = ORDER_CHECKPOINT;
 
-	uint8_t* buf = new uint8_t[MAX_SIZE];
-	size_t size = fread(buf, 1, MAX_SIZE, stdin);
+	fprintf(stderr, "file_size: %llu\n", file_size);
+	uint8_t* buf = new uint8_t[file_size];
+	size_t size = fread(buf, 1, file_size, stdin);
 
 	CharJoining prev_joining = JOINS_NONE;
 	uint8_t* data = buf;
@@ -512,7 +530,7 @@ int main(int argc, const char* argv[])
 	uint8_t* context_start = data;
 	while (size >= 0)
 	{
-		uint8_t byte = *data;
+		const uint8_t byte = *data;
 		CharOrdering my_ordering = map_ordering[byte];
 		if (my_ordering == ORDER_CHECKPOINT || size == 0)
 		{
@@ -520,7 +538,7 @@ int main(int argc, const char* argv[])
 			// Reverse the context
 			for (int i = 0; context_start + i < context_end - i; ++i)
 			{
-				uint8_t temp = context_end[-i];
+				const uint8_t temp = context_end[-i];
 				context_end[-i] = context_start[i];
 				context_start[i] = temp;
 			}
@@ -551,7 +569,7 @@ int main(int argc, const char* argv[])
 #else
 	while (size > 0)
 	{
-		uint8_t byte = *data;
+		const uint8_t byte = *data;
 		prev_joining = print_byte(byte, prev_joining);
 		++data;
 		--size;
