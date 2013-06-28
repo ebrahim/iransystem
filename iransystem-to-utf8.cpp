@@ -448,7 +448,7 @@ int main(int argc, const char* argv[])
 				break;
 			case 0xF2:		// لا
 				map[i] = "\xD9\x84\xD8\xA7";
-				map_size[i] = 2;
+				map_size[i] = 4;
 				map_joining[i] = JOINS_PREV;
 				break;
 			case 0xF3:		// لام اول و وسط
